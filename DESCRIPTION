@@ -1,0 +1,17 @@
+Package: licor
+Type: Package
+Title: Tools for processing molecular data from a Licor sequencer
+Version: 0.0.1
+Date: 2013-09-02
+Author: Reinhard Simon
+Maintainer: "Simon, Reinhard (CIP)" <R.SIMON@CGIAR.ORG>
+URL: https://github.com/c5sire/licor
+Description: The package provides currently minimal functionality to convert
+    licor data to a more common data format of a matrix of 0 and 1.
+License: GPL (>=3)
+LazyData: yes
+VignetteBuilder: knitr
+Depends:
+    R (>= 2.15.1)
+Collate:
+    'licor.R'
