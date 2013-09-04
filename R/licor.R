@@ -61,5 +61,16 @@ licor2matrix <- function(filename=NULL, write=T){
 }
 
 
+#' Presents the packages graphical user interface
+#'
+#' Runs a web server to show the user interface.
+#'
+#' @param port the port where to listen; 1971 by default.
+#' @author Reinhard Simon
+#' @family interface
+#' @export
+runLicorMatrix <- function(port = 1972L) {
+  shiny::runApp(system.file("www", package = "licor"), port = port)
+} 
 
 
