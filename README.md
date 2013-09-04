@@ -14,7 +14,10 @@ Installation
 
 ```{r}
 install.packages("devtools")
+
 devtools::install_github("licor", user="c5sire")
+
+
 ```
 
 Usage
