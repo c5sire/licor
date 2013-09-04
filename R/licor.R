@@ -33,6 +33,7 @@ createMatrix <- function (data, d2) {
 #' transformed data in .csv format within the the same path. The file name is appended with '_out'
 #' and the extension set to '.csv'.
 #' 
+#' @aliases licor2matrix
 #' @param filename an optional filename given the full path or relative path. If not given the user is asked.
 #' @param write logical shall an output file automatically be written? Default is TRUE.
 #' @return list filename and data if succesful; NA if otherwise
@@ -64,8 +65,10 @@ licor2matrix <- function(filename=NULL, write=T){
 #' Presents the packages graphical user interface
 #'
 #' Runs a web server to show the user interface.
-#'
-#' @param port the port where to listen; 1971 by default.
+#' 
+#' 
+#' @aliases runLicorMatrix
+#' @param port the port where to listen; 1972 by default.
 #' @author Reinhard Simon
 #' @family interface
 #' @export
