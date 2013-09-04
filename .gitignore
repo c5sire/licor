@@ -5,7 +5,7 @@
 *-Ex.R
 .Rproj.user
 .Rbuildignore
-/inst
+/inst/files
 README.html
 licor.Rproj
-/man
+
