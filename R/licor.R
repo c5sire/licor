@@ -9,7 +9,7 @@ convertVals = function(vals, refs){
 identifyUniqueVals <- function (data) {
   d1= data[,c(3:ncol(data))]
   d2=sort(unique(unlist(mapply(unique, d1))))
-  d2=d2[d2>0]
+  d2=rev(d2[d2>0])
   d2
 }
 
@@ -34,10 +34,11 @@ createMatrix <- function (data, d2) {
 #' and the extension set to '.csv'.
 #' 
 #' @param filename an optional filename given the full path or relative path. If not given the user is asked.
-#' @return transformed data if succesful; NA if otherwise
+#' @param write logical shall an output file automatically be written? Default is TRUE.
+#' @return list filename and data if succesful; NA if otherwise
 #' @author Reinhard Simon
 #' @export
-licor2matrix <- function(filename=NULL){
+licor2matrix <- function(filename=NULL, write=T){
   if(is.null(filename)) {
     filename = choose.files(default = "", caption = "Select licor file!",
                             filters = c("Licor data","*.txt") )
@@ -51,7 +52,10 @@ licor2matrix <- function(filename=NULL){
     
     #store
     outname = file.path(dirname(filename), gsub(".txt","_out.csv",basename(filename),) )
-    write.csv(res,outname, row.names=F)
+    if(write){
+      write.csv(res,outname, row.names=F)  
+    }
+    res=list(filename = outname, data=res)
   }
   res
 }
