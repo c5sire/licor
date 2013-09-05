@@ -31,6 +31,13 @@ The function will ask using a file dialog for a data archive to process. The fil
 ```{r}
 library(licor)
 
-data = licor2matrix()
+data = read.licor() #interactive modus
+
+#uncomment next:
+#data = read.licor("filename")
+
+matr = licor2matrix(data)
+
+write.licor(matr)
 ```
 
