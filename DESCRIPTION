@@ -13,6 +13,8 @@ LazyData: yes
 VignetteBuilder: knitr
 Depends:
     R (>= 2.15.1),
-    shiny
+    shiny,
+    stringr,
+    xlsx
 Collate:
     'licor.R'

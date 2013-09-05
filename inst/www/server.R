@@ -10,7 +10,7 @@ shinyServer(function(input, output) {
     #read.csv(inFile$datapath, header=input$header, sep=input$sep, quote=input$quote)
     
     #data = read.csv(inFile$datapath, header=input$header, sep=input$sep, quote=input$quote)
-    data = licor2matrix(inFile$datapath,write=F)
+    data = licor2matrix(inFile$datapath)
     data$data
   })
   

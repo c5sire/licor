@@ -6,6 +6,7 @@
 .Rproj.user
 .Rbuildignore
 /inst/files
+/man
 README.html
 licor.Rproj
 

@@ -1,2 +1,6 @@
+export(join.markers)
 export(licor2matrix)
+export(read.licor)
 export(runLicorMatrix)
+export(summary.licor)
+export(write.licor)
