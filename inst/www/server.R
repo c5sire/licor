@@ -1,4 +1,5 @@
 library(licor)
+library(stringr)
 
 shinyServer(function(input, output) {
   datasetInput <- reactive({
@@ -6,12 +7,9 @@ shinyServer(function(input, output) {
     
     if (is.null(inFile))
       return(NULL)
+    out = read.licor(filename = inFile$name, datapath=inFile$datapath)
     
-    #read.csv(inFile$datapath, header=input$header, sep=input$sep, quote=input$quote)
-    
-    #data = read.csv(inFile$datapath, header=input$header, sep=input$sep, quote=input$quote)
-    data = licor2matrix(inFile$datapath)
-    data$data
+    licor2matrix(out)
   })
   
   output$contents <- renderTable({
@@ -20,20 +18,32 @@ shinyServer(function(input, output) {
     # file, it will be a data frame with 'name', 'size', 'type', and 'datapath' 
     # columns. The 'datapath' column will contain the local filenames where the 
     # data can be found.
-    datasetInput()
+    
+    inFile <- input$file1
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    out = datasetInput()
+    summary.licor(out)
     
    },digits = 0)
   
+
+getExtension <-reactive({
+  inFile <- input$file1$name
+  if(str_detect(inFile,".xlsx")) return(".xlsx")
+  return(".csv")
+})  
   
-  
-  output$downloadData <- downloadHandler(
-    
-    #filename = function() { gsub(".csv","_out.csv",basename(input$file1$datapath)) },
-    filename = function() { "licor2matrix.csv" },
+ 
+ output$downloadData <- downloadHandler(
+    filename = function() { paste("licor2matrix",getExtension(),sep=".") },
     content = function(file) {
-      write.csv(datasetInput(), file)
+      write.licor(datasetInput(), file)
     }
-  )
-  
+
+)
   
 })
+

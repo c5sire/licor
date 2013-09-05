@@ -46,7 +46,7 @@ getValidLicorTables <- function(filename){
   nms = names(getSheets(wb))
   n = length(nms)
   res = logical(n)
-  out = list()
+  out = as.list(nms)
   j = 0
   for(i in 1:n){
     ok = FALSE
@@ -74,27 +74,37 @@ getValidLicorTables <- function(filename){
 #' 
 #' @aliases read.licor
 #' @param filename expects a tab delimted text file or an excel sheet
+#' @param datapath for use with web
 #' @return list with filename entry and a sublist of datasets (named by sheet names or "csv" otherwise)
 #' @author Reinhard Simon
 #' @export
-read.licor <- function(filename=NULL){
+read.licor <- function(filename=NULL, datapath=NULL){
   data = NULL
-  sheetName = NULL
-  if(is.null(filename)) {
+  #sheetName = NULL
+  if(!is.null(filename)){
+    if(!is.null(datapath)) {
+      fn = datapath
+    } else fn = filename
+    
+  if(is.null(fn)) {
     Excel = c("Excel files (*.xlsx;*.xls)","*.xlsx;*.xls")
-    Filters2 = rbind(Filters,Excel)
+    TabDel= c("Tab delimited file (*.txt)","*.txt")
+    Filters2 = rbind(Filters,Excel,TabDel)
     filename = choose.files(default = "", caption = "Select licor file!",
-                            filters = Filters2[c("txt","Excel"),] 
+                            filters = Filters2[c("TabDel","Excel"),] 
     )
   }
-  
-  if(length(filename)>0){
+  #print(n)
+     
+  try({
     if(str_detect(filename,".txt")){
-      data = list(csv = read.csv(filename, stringsAsFactors=FALSE, header=F, sep="\t"))  
-    } else {
-      #data = read.xlsx2(filename, sheetName = sheetName, stringsAsFactors=FALSE, header=FALSE) 
-      data = getValidLicorTables(filename)
+      data = list(csv = read.csv(fn, stringsAsFactors=FALSE, header=F, sep="\t"))  
+    } 
+    if(str_detect(filename,".xlsx")) { 
+      data = getValidLicorTables(fn)
     }
+  
+  }, silent=TRUE)
   }
   list(filename = filename, data=data)
 }
@@ -112,6 +122,7 @@ read.licor <- function(filename=NULL){
 #' @author Reinhard Simon
 #' @export
 licor2matrix <- function(data=NULL){
+  #if(data==NULL) return(NULL)
   res=NA
   n = length(data$data)
   if( n > 0 ){
@@ -119,9 +130,6 @@ licor2matrix <- function(data=NULL){
     for(i in 1:n){
       d2 = identifyUniqueVals(data$data[[i]])
       trf= createMatrix(data$data[[i]], d2)
-      
-      #store
-      #outname = file.path(dirname(filename), gsub("txt",names(res)[1],basename(filename),) )
       newdata = cbind(data$data[[i]],trf)
       names(newdata)[1] = "Genotype"
       db[[i]] = newdata
@@ -133,7 +141,8 @@ licor2matrix <- function(data=NULL){
 }
 
 getAlleleStart <-function(data){
-  max(which(str_detect(names(data),"X")))+2
+  pos = str_detect(names(data),"V") | str_detect(names(data),"X") 
+  max(which(pos))+2
 }
 
 #' summarizes the marker data
@@ -147,7 +156,8 @@ getAlleleStart <-function(data){
 #' @return data.frame
 #' @author Reinhard Simon
 #' @export
-summary.licor <- function(licor.res){
+summary.licor <- function(licor.res=NULL){
+  #if(licor.res==NULL) return(NULL)
   Sheet = ""
   Marker = ""
   Genotypes = 0
@@ -187,7 +197,8 @@ summary.licor <- function(licor.res){
 #' @return data.frame
 #' @author Reinhard Simon
 #' @export
-join.markers = function(licor.res, all=TRUE){
+join.markers = function(licor.res=NULL, all=TRUE){
+  #if(licor.res==NULL) return(NULL)
   lic = licor.res
   n = length(lic$data)
   out = NULL
@@ -223,17 +234,24 @@ join.markers = function(licor.res, all=TRUE){
 #' 
 #' @aliases write.licor
 #' @param licor.res list object of licor transformation results with filename and data
+#' @param file optional argument to create a new file
 #' @author Reinhard Simon
 #' @export
-write.licor <- function(licor.res) {
+write.licor <- function(licor.res=NULL, file=NULL) {
   lic = licor.res
   n =length(lic$data) 
   if(n > 0){
     filename = lic$filename
+    if(!is.null(file)) filename=file
     if(names(lic$data)[1] == "csv"){
-      write.csv(res$data,filename, row.names=F)    
+      write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
-      wb = loadWorkbook(filename)
+      if(!is.null(file)){
+        wb= createWorkbook(type="xlsx")
+      } else {
+        wb = loadWorkbook(filename)  
+      }
+      
       removeSheet(wb, "Summary Licor data")
       saveWorkbook(wb,filename)
       for(i in 1:n){

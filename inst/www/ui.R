@@ -1,20 +1,11 @@
 shinyUI(pageWithSidebar(
-  headerPanel("Licor to matrix converter (version 0.0.1)"),
+  headerPanel("Licor to matrix converter (version 0.0.3)"),
   sidebarPanel(
-    fileInput('file1', 'Choose CSV File',
-              accept=c('text/csv', 'text/comma-separated-values,text/plain')),
+    fileInput('file1', 'Choose tab delimited or Excel File',
+              #accept=c('application/xls','application/vnd.ms-excel', 'text/csv','text/comma-separated-values,text/plain')),
+              accept=c('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/xlsx')),
     tags$hr(),
-    checkboxInput('header', 'Header', TRUE),
-    radioButtons('sep', 'Separator',
-                 c(Comma=',',
-                   Semicolon=';',
-                   Tab='\t'),
-                 'Comma'),
-    radioButtons('quote', 'Quote',
-                 c(None='',
-                   'Double Quote'='"',
-                   'Single Quote'="'"),
-                 'Double Quote'),
+    
     downloadButton('downloadData', 'Download converted data!')
   ),
   mainPanel(
