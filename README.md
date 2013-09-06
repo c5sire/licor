@@ -12,15 +12,19 @@ Very much work in progress.
 Installation
 ============
 
+The following commands must be copied into the R console.
+
 ```{r}
+# This step is only once necessary of if you want to update
 install.packages("devtools")
 
+# Excecute this to make sure to have the latest version
 devtools::install_github("licor", user="c5sire")
 
 
 ```
 
-Usage
+R console usage
 ======
 
 The function will ask using a file dialog for a data archive to process. The file format has no header. The columns are
@@ -40,4 +44,17 @@ matr = licor2matrix(data)
 
 write.licor(matr)
 ```
+
+Html user interface
+=======
+```{r}
+library(licor)
+
+#This will create a local server and a html interface
+runLicorMatrix()
+
+
+```
+
+
 
