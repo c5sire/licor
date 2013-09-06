@@ -14,9 +14,9 @@ shinyServer(function(input, output) {
     licor2matrix(out)
   })
   
-  output$transform <- reactive({
-    is.list(datasetInput())
-  })
+  doSummary <- reactive({input$summary})
+  
+  doJoin <- reactive({input$join})
   
   output$contents <- renderTable({
     
@@ -46,7 +46,7 @@ getExtension <-reactive({
  output$downloadData <- downloadHandler(
     filename = function() { paste("licor2matrix",getExtension(),sep=".") },
     content = function(file) {
-      write.licor(datasetInput(), file)
+      write.licor(datasetInput(), file, input$summary, input$join)
     }
   )
   

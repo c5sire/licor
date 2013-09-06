@@ -229,27 +229,32 @@ join.markers = function(licor.res=NULL, all=TRUE){
 }
 
 #' Write licor transformed data to a file
+#' 
 #' Assumes a bp weight value or -1 and -9; the latter will be replaced by 0; the weight by 1.
 #' In case of Excel formats the function adds a summary sheet of the different markers, and a joint table
 #' if the total column number is less than 256.
 #' 
+#' By default, the transformed data and the additional tables (summary table, joined markers) will
+#' be added to the same file. Alternatively, using the parameter 'outfile' with a path, 
+#' a new Excel file will be created.
+#' 
 #' @aliases write.licor
 #' @param licor.res list object of licor transformation results with filename and data
-#' @param file optional argument to create a new file
+#' @param outfile file path; optional argument to create a new file
 #' @param summary whether to add the summary; defaults to TRUE
 #' @param join whether to add the joined data; defaults to TRUE
 #' @author Reinhard Simon
 #' @export
-write.licor <- function(licor.res=NULL, file=NULL, summary=TRUE, join=TRUE) {
+write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
   lic = licor.res
   n =length(lic$data) 
   if(n > 0){
     filename = lic$filename
-    if(!is.null(file)) filename=file
+    if(!is.null(outfile)) filename=outfile
     if(names(lic$data)[1] == "csv"){
       write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
-      if(!is.null(file)){
+      if(!is.null(outfile)){
         wb= createWorkbook(type="xlsx")
       } else {
         wb = loadWorkbook(filename)  
