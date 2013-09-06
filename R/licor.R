@@ -236,9 +236,11 @@ join.markers = function(licor.res=NULL, all=TRUE){
 #' @aliases write.licor
 #' @param licor.res list object of licor transformation results with filename and data
 #' @param file optional argument to create a new file
+#' @param summary whether to add the summary; defaults to TRUE
+#' @param join whether to add the joined data; defaults to TRUE
 #' @author Reinhard Simon
 #' @export
-write.licor <- function(licor.res=NULL, file=NULL) {
+write.licor <- function(licor.res=NULL, file=NULL, summary=TRUE, join=TRUE) {
   lic = licor.res
   n =length(lic$data) 
   if(n > 0){
@@ -252,23 +254,26 @@ write.licor <- function(licor.res=NULL, file=NULL) {
       } else {
         wb = loadWorkbook(filename)  
       }
-      
-      removeSheet(wb, "Summary Licor data")
-      saveWorkbook(wb,filename)
-      for(i in 1:n){
-        wb = loadWorkbook(filename)
-        sheet = names(lic$data[i])
-        removeSheet(wb, sheet)
+      if(summary){
+        removeSheet(wb, "Summary Licor data")
         saveWorkbook(wb,filename)
-        write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)    
+        for(i in 1:n){
+          wb = loadWorkbook(filename)
+          sheet = names(lic$data[i])
+          removeSheet(wb, sheet)
+          saveWorkbook(wb,filename)
+          write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)    
+        }
       }
-      write.xlsx2(summary.licor(lic), filename, sheetName = "Summary Licor data",row.names=F, append=T)
-      join = join.markers(lic)
-      wb = loadWorkbook(filename)
-      removeSheet(wb, "Joined icor data")
-      saveWorkbook(wb,filename)
-      if(ncol(join)<256) {
-        write.xlsx2(join, filename, sheetName = "Joined licor data",row.names=F, append=T)
+      if(join){
+        write.xlsx2(summary.licor(lic), filename, sheetName = "Summary Licor data",row.names=F, append=T)
+        join = join.markers(lic)
+        wb = loadWorkbook(filename)
+        removeSheet(wb, "Joined icor data")
+        saveWorkbook(wb,filename)
+        if(ncol(join)<256) {
+          write.xlsx2(join, filename, sheetName = "Joined licor data",row.names=F, append=T)
+        }
       }
     }
     

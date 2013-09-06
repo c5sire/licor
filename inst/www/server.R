@@ -1,6 +1,8 @@
 library(licor)
 library(stringr)
 
+res = gc()
+
 shinyServer(function(input, output) {
   datasetInput <- reactive({
     inFile <- input$file1
@@ -10,6 +12,10 @@ shinyServer(function(input, output) {
     out = read.licor(filename = inFile$name, datapath=inFile$datapath)
     
     licor2matrix(out)
+  })
+  
+  output$transform <- reactive({
+    is.list(datasetInput())
   })
   
   output$contents <- renderTable({
@@ -42,8 +48,7 @@ getExtension <-reactive({
     content = function(file) {
       write.licor(datasetInput(), file)
     }
-
-)
+  )
   
 })
 
