@@ -130,10 +130,13 @@ licor2matrix <- function(data=NULL){
     for(i in 1:n){
       d2 = identifyUniqueVals(data$data[[i]])
       trf= createMatrix(data$data[[i]], d2)
+      ncl = ncol(data$data[[i]])
       newdata = cbind(data$data[[i]],trf)
       names(newdata)[1] = "Genotype"
+      newdata[,c(ncl+1)] = as.character(newdata[,c(ncl+1)])
       db[[i]] = newdata
       names(db)[i] = names(data$data[i])
+      
       res=list(filename = data$filename, data = db)
     }
   }
@@ -228,6 +231,60 @@ join.markers = function(licor.res=NULL, all=TRUE){
   out
 }
 
+getCsAltRow <- function(wb){
+  Fill(foregroundColor = "lightgrey", backgroundColor="lightgrey")
+}
+
+getCsHeader <- function(wb){
+  CellStyle(wb, alignment=Alignment(h="ALIGN_CENTER"),
+            fill=Fill(foregroundColor = "lightgreen", backgroundColor="lightgreen"))
+}
+
+getCsRowHeader <- function(wb){
+  CellStyle(wb, alignment=Alignment(h="ALIGN_CENTER"),
+            fill=Fill(foregroundColor = "lightgrey", backgroundColor="lightgrey"),
+            font = Font(wb, color = "grey50"))
+}
+
+
+getCsNegNum <- function(wb){
+  Font(wb, color="lightsalmon")
+}
+
+
+formatSheet <- function(data, sheetName, wb){
+  sheet = createSheet(wb, sheetName)
+  cb = CellBlock(sheet,1,1, nrow(data)+1, ncol(data))
+  
+  for(i in 1:ncol(data)){
+    CB.setColData(cb, data[,i], i, rowOffset=1, showNA=TRUE,
+                  colStyle=NULL)
+  }
+  als = getAlleleStart(data)-1
+  CB.setColData(cb,data[,1],colIndex = 1, colStyle = getCsRowHeader(wb))
+  CB.setColData(cb,data[,2],colIndex = 2, colStyle = getCsRowHeader(wb))
+  CB.setColData(cb,data[,als],colIndex = als, colStyle = getCsRowHeader(wb))
+  
+  #Format header
+  CB.setRowData(cb,names(data),1, rowStyle = getCsHeader(wb))
+  
+  
+  
+  ind  <- which(data[,c(3:(als-1))] <= 0, arr.ind=TRUE)
+  CB.setFont(cb, getCsNegNum(wb), ind[,1]+1, ind[,2]+2)
+  
+  ind  <- which(data[,c((als):ncol(data))] <= 0, arr.ind=TRUE)
+  CB.setFont(cb, getCsNegNum(wb), ind[,1]+1, ind[,2]+als-1)
+  
+  #Alternating rows
+  rs = which((1:nrow(data) %% 2==0))
+  ind.row = rep(rs, ncol(data))
+  ind.col = sort(rep(1:ncol(data), length(rs)))
+  CB.setFill(cb, getCsAltRow(wb), ind.row, ind.col)
+  autoSizeColumn(sheet, 1:ncol(data))
+}
+
+
 #' Write licor transformed data to a file
 #' 
 #' Assumes a bp weight value or -1 and -9; the latter will be replaced by 0; the weight by 1.
@@ -262,14 +319,19 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
       if(summary){
         removeSheet(wb, "Summary Licor data")
         saveWorkbook(wb,filename)
-        for(i in 1:n){
-          wb = loadWorkbook(filename)
-          sheet = names(lic$data[i])
-          removeSheet(wb, sheet)
-          saveWorkbook(wb,filename)
-          write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)    
-        }
       }
+      # Save each marker / sheet
+      for(i in 1:n){
+        wb = loadWorkbook(filename)
+        sheet = names(lic$data[i])
+        removeSheet(wb, sheet)
+        saveWorkbook(wb,filename)
+        #write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)   
+        wb = loadWorkbook(filename)
+        formatSheet(lic$data[[i]],sheet,wb)
+        saveWorkbook(wb,filename)
+      }
+      
       if(join){
         write.xlsx2(summary.licor(lic), filename, sheetName = "Summary Licor data",row.names=F, append=T)
         join = join.markers(lic)
@@ -280,6 +342,7 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
           write.xlsx2(join, filename, sheetName = "Joined licor data",row.names=F, append=T)
         }
       }
+      
     }
     
   }
