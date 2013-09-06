@@ -1,5 +1,5 @@
 shinyUI(pageWithSidebar(
-  headerPanel("Licor to matrix converter (version 0.0.3)"),
+  headerPanel("Licor to matrix converter (version 0.0.4)"),
   sidebarPanel(
     fileInput('file1', 'Choose tab delimited or Excel File',
               #accept=c('application/xls','application/vnd.ms-excel', 'text/csv','text/comma-separated-values,text/plain')),

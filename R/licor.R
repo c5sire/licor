@@ -268,8 +268,6 @@ formatSheet <- function(data, sheetName, wb){
   #Format header
   CB.setRowData(cb,names(data),1, rowStyle = getCsHeader(wb))
   
-  
-  
   ind  <- which(data[,c(3:(als-1))] <= 0, arr.ind=TRUE)
   CB.setFont(cb, getCsNegNum(wb), ind[,1]+1, ind[,2]+2)
   
