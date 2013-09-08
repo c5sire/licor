@@ -44,10 +44,16 @@ getExtension <-reactive({
   
  
  output$downloadData <- downloadHandler(
-    filename = function() { paste("licor2matrix",getExtension(),sep=".") },
+    filename = function() { "licor2matrix.xlsx" },
     content = function(file) {
       #write.licor(datasetInput(), file, input$summary, input$join)
-      write.licor(datasetInput(), file)
+      #print(input$file1)
+#       if(!str_detect(file,".xlsx")){
+#         to = paste(file,"xlsx", sep=".")
+#         file.rename(file,to)
+#         file = to
+#       }
+      write.licor(datasetInput(), file, TRUE,TRUE)
     }
   )
   

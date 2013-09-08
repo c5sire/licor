@@ -2,7 +2,6 @@
 # Coloring on Mac via the xlsx library which uses Java does therefore not work.
 # Workaround: find out if on Mac and don't do formatting.
 
-library(stringr)
 
 is.mac <- function(){
   str_detect(.Platform$pkgType,"mac.binary")
@@ -54,7 +53,8 @@ checkLicorFormat <- function(atable){
 
 getValidLicorTables <- function(filename){
   wb = loadWorkbook(filename)
-  nms = names(getSheets(wb))
+  #nms = names(getSheets(wb))
+  nms = getSheets(wb)
   n = length(nms)
   res = logical(n)
   out = as.list(nms)
@@ -62,14 +62,15 @@ getValidLicorTables <- function(filename){
   for(i in 1:n){
     ok = FALSE
     try({
-      data = read.xlsx2(filename, sheetName=nms[i], header=FALSE, stringsAsFactors=FALSE)
+      #data = read.xlsx2(filename, sheetName=nms[i], header=FALSE, stringsAsFactors=FALSE)
+      data = readWorksheet(wb, nms[i], header=FALSE)
       ok = TRUE
     }, silent=TRUE)
     if(ok){
       res[i] = checkLicorFormat(data)
       if(res[i]){
         j = j + 1
-        for(k in 3:ncol(data)) data[,k] = as.integer(data[,k])
+        #for(k in 3:ncol(data)) data[,k] = as.integer(data[,k])
         out[[j]] = data
         names(out)[j] = nms[i]
       }
@@ -155,7 +156,7 @@ licor2matrix <- function(data=NULL){
 }
 
 getAlleleStart <-function(data){
-  pos = str_detect(names(data),"V") | str_detect(names(data),"X") 
+  pos = str_detect(names(data),"V") | str_detect(names(data),"X") | str_detect(names(data),"Col")  
   max(which(pos))+2
 }
 
@@ -242,61 +243,53 @@ join.markers = function(licor.res=NULL, all=TRUE){
   out
 }
 
-getCsAltRow <- function(wb){
-  Fill(foregroundColor = "lightgrey", backgroundColor="lightgrey")
-}
-
-getCsHeader <- function(wb){
-  CellStyle(wb, alignment=Alignment(h="ALIGN_CENTER"),
-            fill=Fill(foregroundColor = "lightgreen", backgroundColor="lightgreen"))
-            
-}
-
-getCsRowHeader <- function(wb){
-  CellStyle(wb, alignment=Alignment(h="ALIGN_CENTER"),
-            fill=Fill(foregroundColor = "lightgrey", backgroundColor="lightgrey"),
-            font = Font(wb, color = "grey50"))
-}
 
 
-getCsNegNum <- function(wb){
-  Font(wb, color="lightsalmon")
-}
-
-
-formatSheet <- function(data, sheetName, wb){
- 
-  sheet = createSheet(wb, sheetName)
-
-  cb = CellBlock(sheet,1,1, nrow(data)+1, ncol(data))
-  
-  for(i in 1:ncol(data)){
-    CB.setColData(cb, data[,i], i, rowOffset=1, showNA=TRUE,
-                  colStyle=NULL)
-  }
+formatMarkerSheet <- function(wb, sheetName, data){
   als = getAlleleStart(data)-1
-  CB.setColData(cb,data[,1],colIndex = 1, colStyle = getCsRowHeader(wb))
-  CB.setColData(cb,data[,2],colIndex = 2, colStyle = getCsRowHeader(wb))
-  CB.setColData(cb,data[,als],colIndex = als, colStyle = getCsRowHeader(wb))
+  colHdr = createCellStyle(wb, name = "ColHdr")
+  setFillPattern(colHdr, fill = XLC$"FILL.SOLID_FOREGROUND")
+  setFillForegroundColor(colHdr, color = XLC$"COLOR.LIGHT_GREEN")
   
-  #Format header
-  CB.setRowData(cb,names(data),1, rowStyle = getCsHeader(wb))
+  negVal = createCellStyle(wb, name = "NegValue")
+  setFillPattern(negVal, fill = XLC$"FILL.SOLID_FOREGROUND")
+  setFillForegroundColor(negVal, color = XLC$"COLOR.TAN")
   
-  ind  <- which(data[,c(3:(als-1))] <= 0, arr.ind=TRUE)
-  CB.setFont(cb, getCsNegNum(wb), ind[,1]+1, ind[,2]+2)
-  
-  ind  <- which(data[,c((als):ncol(data))] <= 0, arr.ind=TRUE)
-  CB.setFont(cb, getCsNegNum(wb), ind[,1]+1, ind[,2]+als-1)
+  altRow = createCellStyle(wb, name = "AltRow")
+  setFillPattern(altRow, fill = XLC$"FILL.SOLID_FOREGROUND")
+  setFillForegroundColor(altRow, color = XLC$"COLOR.GREY_40_PERCENT")
   
   #Alternating rows
   rs = which((1:nrow(data) %% 2==0))
   ind.row = rep(rs, ncol(data))
   ind.col = sort(rep(1:ncol(data), length(rs)))
-  CB.setFill(cb, getCsAltRow(wb), ind.row, ind.col)
-
-  autoSizeColumn(sheet, 1:ncol(data))
-
+  setCellStyle(wb, sheet = sheetName, row = ind.row, col = ind.col, cellstyle = altRow)
+  
+  #1st part of table  
+  rowInd = 1
+  colInd = 1:ncol(data)
+  setCellStyle(wb, sheet = sheetName, row = rowInd, col = colInd, cellstyle = colHdr)
+   
+  #2nd part
+  ind  <- which(data[,c(3:(als-1))] <= 0, arr.ind=TRUE)
+  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+2, cellstyle = negVal)
+  ind  <- which(data[,c((als+1):ncol(data))] <= 0, arr.ind=TRUE)
+  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+als, cellstyle = negVal)
+  
+   
 }
+
+
+
+setGeneric("autoSizeColumns",
+           function(object, name, cols) standardGeneric("autoSizeColumns"))
+
+setMethod("autoSizeColumns", 
+          signature(object = "workbook", name="character", cols="integer"), 
+          function(object, name, cols) {
+            for(i in 1:cols) object$setColumnWidth(name, i, -1)
+          }
+)
 
 
 #' Write licor transformed data to a file
@@ -312,60 +305,59 @@ formatSheet <- function(data, sheetName, wb){
 #' @aliases write.licor
 #' @param licor.res list object of licor transformation results with filename and data
 #' @param outfile file path; optional argument to create a new file
-#' @param summary whether to add the summary; defaults to TRUE
-#' @param join whether to add the joined data; defaults to TRUE
+#' @param summary whether to add the summary; defaults to FALSE
+#' @param join whether to add the joined data; defaults to FALSE
 #' @author Reinhard Simon
 #' @export
-write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
+write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE) {
   lic = licor.res
   n =length(lic$data) 
+  summName = "Summary Licor data"
+  joinName = "Joined Licor data"
   if(n > 0){
     filename = lic$filename
     if(!is.null(outfile)) filename=outfile
     if(names(lic$data)[1] == "csv"){
       write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
-      if(!is.null(outfile)){
-        wb= createWorkbook(type="xlsx")
-      } else {
-        wb = loadWorkbook(filename)  
-      }
-      if(summary){
-        removeSheet(wb, "Summary Licor data")
-        saveWorkbook(wb,filename)
-      }
+      unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
+      wb= loadWorkbook(filename, create=TRUE)
       # Save each marker / sheet
       for(i in 1:n){
-        wb = loadWorkbook(filename)
-        sheet = names(lic$data[i])
-        removeSheet(wb, sheet)
-        saveWorkbook(wb,filename)
-        #write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)   
-        
-        if(is.mac()){
-          write.xlsx2(lic$data[[i]], filename, sheetName = sheet,row.names=F, append=T)
+         if(is.mac()){
+          sheetName = names(lic$data)[i]
+          wb$createSheet(sheetName)
+          wb$writeWorksheet(lic$data[[i]], sheetName, header=TRUE)
+          formatMarkerSheet(wb, sheetName, lic$data[[i]])
+          
+          wb$setAutoFilter(sheetName, reference = aref("A1", dim(lic$data[[i]])))
+          wb$autoSizeColumns(sheetName, ncol(lic$data[[i]]))
+          
+          
         } else {
-          wb = loadWorkbook(filename)
-          formatSheet(lic$data[[i]],sheet,wb)
-          saveWorkbook(wb,filename)
+          #formatSheet(lic$data[[i]],sheet,wb)
         }
-        
+      } # end for
+      
+      if(summary){
+        wb$createSheet(summName)
+        smry = summary.licor(lic)
+        wb$writeWorksheet(smry, summName, header=TRUE)
+        wb$autoSizeColumns(summName, ncol(smry))
       }
       
       if(join){
-        write.xlsx2(summary.licor(lic), filename, sheetName = "Summary Licor data",row.names=F, append=T)
-        join = join.markers(lic)
-        wb = loadWorkbook(filename)
-        removeSheet(wb, "Joined icor data")
-        saveWorkbook(wb,filename)
-        if(ncol(join)<256) {
-          write.xlsx2(join, filename, sheetName = "Joined licor data",row.names=F, append=T)
+        joinM = join.markers(lic)
+        if(ncol(joinM)<256) {
+          wb$createSheet(joinName)
+          wb$writeWorksheet(joinM, joinName, header = TRUE)
+          wb$autoSizeColumns(joinName, ncol(joinM))
         }
-      }
-      
-    }
+      } # end join
+      saveWorkbook(wb,filename)
+    } #end else
     
-  }
+  } # end if
 }
 
                         
