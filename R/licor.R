@@ -1,3 +1,14 @@
+# Apple currently does not fully support Java (specifically access to the AWT library).
+# Coloring on Mac via the xlsx library which uses Java does therefore not work.
+# Workaround: find out if on Mac and don't do formatting.
+
+library(stringr)
+
+is.mac <- function(){
+  str_detect(.Platform$pkgType,"mac.binary")
+}
+
+
 # convert to zero or one
 convertVals = function(vals, refs){
   d3 = refs %in% vals
@@ -238,6 +249,7 @@ getCsAltRow <- function(wb){
 getCsHeader <- function(wb){
   CellStyle(wb, alignment=Alignment(h="ALIGN_CENTER"),
             fill=Fill(foregroundColor = "lightgreen", backgroundColor="lightgreen"))
+            
 }
 
 getCsRowHeader <- function(wb){
@@ -253,7 +265,9 @@ getCsNegNum <- function(wb){
 
 
 formatSheet <- function(data, sheetName, wb){
+ 
   sheet = createSheet(wb, sheetName)
+
   cb = CellBlock(sheet,1,1, nrow(data)+1, ncol(data))
   
   for(i in 1:ncol(data)){
@@ -279,7 +293,9 @@ formatSheet <- function(data, sheetName, wb){
   ind.row = rep(rs, ncol(data))
   ind.col = sort(rep(1:ncol(data), length(rs)))
   CB.setFill(cb, getCsAltRow(wb), ind.row, ind.col)
+
   autoSizeColumn(sheet, 1:ncol(data))
+
 }
 
 
@@ -325,9 +341,15 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
         removeSheet(wb, sheet)
         saveWorkbook(wb,filename)
         #write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)   
-        wb = loadWorkbook(filename)
-        formatSheet(lic$data[[i]],sheet,wb)
-        saveWorkbook(wb,filename)
+        
+        if(is.mac()){
+          write.xlsx2(lic$data[[i]], filename, sheetName = sheet,row.names=F, append=T)
+        } else {
+          wb = loadWorkbook(filename)
+          formatSheet(lic$data[[i]],sheet,wb)
+          saveWorkbook(wb,filename)
+        }
+        
       }
       
       if(join){
