@@ -299,6 +299,16 @@ formatSheet <- function(data, sheetName, wb){
 }
 
 
+clearSheets <- function (wb, n, lic) {
+  removeSheet(wb, summName)
+  removeSheet(wb, joinName)
+  for(i in 1:n){
+    sheet = names(lic$data[i])
+    removeSheet(wb, sheet)
+  }
+}
+
+
 #' Write licor transformed data to a file
 #' 
 #' Assumes a bp weight value or -1 and -9; the latter will be replaced by 0; the weight by 1.
@@ -319,6 +329,8 @@ formatSheet <- function(data, sheetName, wb){
 write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
   lic = licor.res
   n =length(lic$data) 
+  summName = "Summary Licor data"
+  joinName = "Joined Licor data"
   if(n > 0){
     filename = lic$filename
     if(!is.null(outfile)) filename=outfile
@@ -328,44 +340,36 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=TRUE, join=TRUE) {
       if(!is.null(outfile)){
         wb= createWorkbook(type="xlsx")
       } else {
-        wb = loadWorkbook(filename)  
+        wb = loadWorkbook(filename) 
+        clearSheets(wb, n, lic)
       }
-      if(summary){
-        removeSheet(wb, "Summary Licor data")
-        saveWorkbook(wb,filename)
-      }
+      
       # Save each marker / sheet
       for(i in 1:n){
-        wb = loadWorkbook(filename)
-        sheet = names(lic$data[i])
-        removeSheet(wb, sheet)
-        saveWorkbook(wb,filename)
-        #write.xlsx2(lic$data[[i]] ,filename, sheetName = sheet,row.names=F, append=T)   
-        
-        if(is.mac()){
-          write.xlsx2(lic$data[[i]], filename, sheetName = sheet,row.names=F, append=T)
+         if(is.mac()){
+          sheet = createSheet(wb,names(lic$data)[i])
+          addDataFrame(lic$data[[i]], sheet, row.names = FALSE)
         } else {
-          wb = loadWorkbook(filename)
           formatSheet(lic$data[[i]],sheet,wb)
-          saveWorkbook(wb,filename)
         }
-        
+      } # end for
+      
+      if(summary){
+        sheet = createSheet(wb, summName)
+        addDataFrame(summary.licor(lic), sheet, row.names = FALSE)
       }
       
       if(join){
-        write.xlsx2(summary.licor(lic), filename, sheetName = "Summary Licor data",row.names=F, append=T)
-        join = join.markers(lic)
-        wb = loadWorkbook(filename)
-        removeSheet(wb, "Joined icor data")
-        saveWorkbook(wb,filename)
-        if(ncol(join)<256) {
-          write.xlsx2(join, filename, sheetName = "Joined licor data",row.names=F, append=T)
+        joinM = join.markers(lic)
+        if(ncol(joinM)<256) {
+          sheet = createSheet(wb, joinName)
+          addDataFrame(joinM, sheet, row.names = FALSE)
         }
-      }
-      
-    }
+      } # end join
+      saveWorkbook(wb,filename)
+    } #end else
     
-  }
+  } # end if
 }
 
                         
