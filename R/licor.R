@@ -247,38 +247,61 @@ join.markers = function(licor.res=NULL, all=TRUE){
   out
 }
 
+hasCellStyle <- function(wb, styleName){
+  ok = FALSE
+  try({
+    x = getCellStyle(wb, styleName)
+    ok = class(x) == 'cellstyle'
+  }, silent = TRUE)
+  ok
+}
 
+getMyStyles <- function(wb){
+  if(!hasCellStyle(wb,"ColHdr")){
+    colHdr = createCellStyle(wb, name = "ColHdr")
+    setFillPattern(colHdr, fill = XLC$"FILL.SOLID_FOREGROUND")
+    setFillForegroundColor(colHdr, color = XLC$"COLOR.LIGHT_GREEN")
+  } else {
+    colHdr = getCellStyle(wb,"ColHdr")
+  }
+  if(!hasCellStyle(wb,"NegValue")){
+    negVal = createCellStyle(wb, name = "NegValue")
+    setFillPattern(negVal, fill = XLC$"FILL.SOLID_FOREGROUND")
+    setFillForegroundColor(negVal, color = XLC$"COLOR.TAN")
+  } else {
+    negVal = getCellStyle(wb, "NegValue")
+  }
+  if(!hasCellStyle(wb,"AltRow")){
+    altRow = createCellStyle(wb, name = "AltRow")
+    setFillPattern(altRow, fill = XLC$"FILL.SOLID_FOREGROUND")
+    setFillForegroundColor(altRow, color = XLC$"COLOR.GREY_40_PERCENT")
+  } else {
+    altRow = getCellStyle(wb,"AltRow")
+  }
+  
+  list(colHdr = colHdr, negVal = negVal, altRow = altRow)
+}
 
 formatMarkerSheet <- function(wb, sheetName, data){
   als = getAlleleStart(data)-1
-  colHdr = createCellStyle(wb, name = "ColHdr")
-  setFillPattern(colHdr, fill = XLC$"FILL.SOLID_FOREGROUND")
-  setFillForegroundColor(colHdr, color = XLC$"COLOR.LIGHT_GREEN")
-  
-  negVal = createCellStyle(wb, name = "NegValue")
-  setFillPattern(negVal, fill = XLC$"FILL.SOLID_FOREGROUND")
-  setFillForegroundColor(negVal, color = XLC$"COLOR.TAN")
-  
-  altRow = createCellStyle(wb, name = "AltRow")
-  setFillPattern(altRow, fill = XLC$"FILL.SOLID_FOREGROUND")
-  setFillForegroundColor(altRow, color = XLC$"COLOR.GREY_40_PERCENT")
+  csl = getMyStyles(wb)
   
   #Alternating rows
   rs = which((1:nrow(data) %% 2==0))
   ind.row = rep(rs, ncol(data))
   ind.col = sort(rep(1:ncol(data), length(rs)))
-  setCellStyle(wb, sheet = sheetName, row = ind.row, col = ind.col, cellstyle = altRow)
+  setCellStyle(wb, sheet = sheetName, row = ind.row, col = ind.col, cellstyle = csl$altRow)
   
   #1st part of table  
   rowInd = 1
   colInd = 1:ncol(data)
-  setCellStyle(wb, sheet = sheetName, row = rowInd, col = colInd, cellstyle = colHdr)
+  setCellStyle(wb, sheet = sheetName, row = rowInd, col = colInd, cellstyle = csl$colHdr)
    
   #2nd part
   ind  <- which(data[,c(3:(als-1))] <= 0, arr.ind=TRUE)
-  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+2, cellstyle = negVal)
+  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+2, cellstyle = csl$negVal)
   ind  <- which(data[,c((als+1):ncol(data))] <= 0, arr.ind=TRUE)
-  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+als, cellstyle = negVal)
+  setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+als, cellstyle = csl$negVal)
   
    
 }
@@ -296,16 +319,6 @@ setMethod("autoSizeColumns",
 )
 
 
-clearSheets <- function (wb, n, lic) {
-  removeSheet(wb, summName)
-  removeSheet(wb, joinName)
-  for(i in 1:n){
-    sheet = names(lic$data[i])
-    removeSheet(wb, sheet)
-  }
-}
-
-
 #' Write licor transformed data to a file
 #' 
 #' Assumes a bp weight value or -1 and -9; the latter will be replaced by 0; the weight by 1.
@@ -317,13 +330,16 @@ clearSheets <- function (wb, n, lic) {
 #' a new Excel file will be created.
 #' 
 #' @aliases write.licor
-#' @param licor.res list object of licor transformation results with filename and data
-#' @param outfile file path; optional argument to create a new file
-#' @param summary whether to add the summary; defaults to FALSE
-#' @param join whether to add the joined data; defaults to FALSE
+#' @param licor.res list object of licor transformation results with filename and data.
+#' @param outfile file path; optional argument to create a new file.
+#' @param summary whether to add the summary; defaults to FALSE.
+#' @param join whether to add the joined data; defaults to FALSE.
+#' @param use.color whether to color cells and headers. Takes more time. Default is FALSE.
+#' @param use.autoFilter whether to set autofilter on header row. Default is FALSE.
 #' @author Reinhard Simon
 #' @export
-write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE) {
+write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE, use.color = FALSE,
+                        use.autoFilter=FALSE) {
   lic = licor.res
   n =length(lic$data) 
   summName = "Summary Licor data"
@@ -334,16 +350,17 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
     if(names(lic$data)[1] == "csv"){
       write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
-      unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
+      if(file.exists(filename)) unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
       wb= loadWorkbook(filename, create=TRUE)
       # Save each marker / sheet
       for(i in 1:n){
           sheetName = names(lic$data)[i]
           wb$createSheet(sheetName)
           wb$writeWorksheet(lic$data[[i]], sheetName, header=TRUE)
-          formatMarkerSheet(wb, sheetName, lic$data[[i]])
-          
-          wb$setAutoFilter(sheetName, reference = aref("A1", dim(lic$data[[i]])))
+
+          if(use.color) formatMarkerSheet(wb, sheetName, lic$data[[i]])
+          if(use.autoFilter) wb$setAutoFilter(sheetName, reference = aref("A1", dim(lic$data[[i]])))
+
           wb$autoSizeColumns(sheetName, ncol(lic$data[[i]]))
       }
        
@@ -353,9 +370,6 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
         smry = summary.licor(lic)
         wb$writeWorksheet(smry, summName, header=TRUE)
         wb$autoSizeColumns(summName, ncol(smry))
-
-        sheet = createSheet(wb, summName)
-        addDataFrame(summary.licor(lic), sheet, row.names = FALSE)
       }
       
       if(join){
@@ -366,7 +380,7 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
           wb$autoSizeColumns(joinName, ncol(joinM))
         }
       } # end join
-      saveWorkbook(wb,filename)
+      saveWorkbook(wb)
     } #end else
     
   } # end if
