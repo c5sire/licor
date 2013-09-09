@@ -177,8 +177,9 @@ summary.licor <- function(licor.res=NULL){
   Marker = ""
   Genotypes = 0
   Alleles = 0
+  UniqueAlleles = 0
   bp = ""
-  out = as.data.frame(cbind(Sheet,Marker,Genotypes, Alleles,bp), stringsAsFactors=FALSE)
+  out = as.data.frame(cbind(Sheet,Marker,Genotypes, Alleles,bp,UniqueAlleles), stringsAsFactors=FALSE)
   
   n = length(licor.res$data)
   if(n > 0){
@@ -186,12 +187,15 @@ summary.licor <- function(licor.res=NULL){
       data = licor.res$data[[i]]
       aidx =  getAlleleStart(data) # Index of first allele column
       n.alleles = ncol(data)- aidx + 1
+      a.data = data[, ((aidx ):ncol(data))]
+      u.alleles = paste(names(a.data)[which(colSums(a.data)==1)],collapse=", ")
       nms.alleles = names(data)[aidx:ncol(data)]
       out[i,"Sheet"] = names(licor.res$data[i])
       out[i,"Marker"] = unique(data[,2])
       out[i,"Genotypes"] = nrow(data)
       out[i,"Alleles"] = n.alleles
       out[i,"bp"] = paste(nms.alleles,collapse=", ")
+      out[i,"UniqueAlleles"] = u.alleles
     }
     out$Genotypes = as.integer(out$Genotypes)
     out$Alleles = as.integer(out$Alleles)
