@@ -334,7 +334,6 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
     if(names(lic$data)[1] == "csv"){
       write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
-
       unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
       wb= loadWorkbook(filename, create=TRUE)
       # Save each marker / sheet
@@ -351,7 +350,6 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
           
         } else {
           #formatSheet(lic$data[[i]],sheet,wb)
-
       if(!is.null(outfile)){
         wb= createWorkbook(type="xlsx")
       } else {
@@ -366,12 +364,10 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
           addDataFrame(lic$data[[i]], sheet, row.names = FALSE)
         } else {
           formatSheet(lic$data[[i]],sheet,wb)
-
         }
       } # end for
       
       if(summary){
-
         wb$createSheet(summName)
         smry = summary.licor(lic)
         wb$writeWorksheet(smry, summName, header=TRUE)
@@ -380,19 +376,24 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
         sheet = createSheet(wb, summName)
         addDataFrame(summary.licor(lic), sheet, row.names = FALSE)
 
+        sheet = createSheet(wb, summName)
+        addDataFrame(summary.licor(lic), sheet, row.names = FALSE)
       }
       
       if(join){
         joinM = join.markers(lic)
         if(ncol(joinM)<256) {
-
           wb$createSheet(joinName)
           wb$writeWorksheet(joinM, joinName, header = TRUE)
           wb$autoSizeColumns(joinName, ncol(joinM))
 
           sheet = createSheet(wb, joinName)
           addDataFrame(joinM, sheet, row.names = FALSE)
-
+          wb$createSheet(joinName)
+          wb$writeWorksheet(joinM, joinName, header = TRUE)
+          wb$autoSizeColumns(joinName, ncol(joinM))
+          sheet = createSheet(wb, joinName)
+          addDataFrame(joinM, sheet, row.names = FALSE)
         }
       } # end join
       saveWorkbook(wb,filename)
