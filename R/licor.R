@@ -296,6 +296,16 @@ setMethod("autoSizeColumns",
 )
 
 
+clearSheets <- function (wb, n, lic) {
+  removeSheet(wb, summName)
+  removeSheet(wb, joinName)
+  for(i in 1:n){
+    sheet = names(lic$data[i])
+    removeSheet(wb, sheet)
+  }
+}
+
+
 #' Write licor transformed data to a file
 #' 
 #' Assumes a bp weight value or -1 and -9; the latter will be replaced by 0; the weight by 1.
@@ -324,6 +334,7 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
     if(names(lic$data)[1] == "csv"){
       write.csv(lic$data,filename, row.names=F)    
     } else { # assume various sheets from excel file
+
       unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
       wb= loadWorkbook(filename, create=TRUE)
       # Save each marker / sheet
@@ -340,22 +351,48 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE)
           
         } else {
           #formatSheet(lic$data[[i]],sheet,wb)
+
+      if(!is.null(outfile)){
+        wb= createWorkbook(type="xlsx")
+      } else {
+        wb = loadWorkbook(filename) 
+        clearSheets(wb, n, lic)
+      }
+      
+      # Save each marker / sheet
+      for(i in 1:n){
+         if(is.mac()){
+          sheet = createSheet(wb,names(lic$data)[i])
+          addDataFrame(lic$data[[i]], sheet, row.names = FALSE)
+        } else {
+          formatSheet(lic$data[[i]],sheet,wb)
+
         }
       } # end for
       
       if(summary){
+
         wb$createSheet(summName)
         smry = summary.licor(lic)
         wb$writeWorksheet(smry, summName, header=TRUE)
         wb$autoSizeColumns(summName, ncol(smry))
+
+        sheet = createSheet(wb, summName)
+        addDataFrame(summary.licor(lic), sheet, row.names = FALSE)
+
       }
       
       if(join){
         joinM = join.markers(lic)
         if(ncol(joinM)<256) {
+
           wb$createSheet(joinName)
           wb$writeWorksheet(joinM, joinName, header = TRUE)
           wb$autoSizeColumns(joinName, ncol(joinM))
+
+          sheet = createSheet(wb, joinName)
+          addDataFrame(joinM, sheet, row.names = FALSE)
+
         }
       } # end join
       saveWorkbook(wb,filename)
