@@ -2,14 +2,11 @@
 \alias{licor2matrix}
 \title{Convert licor data into matrix of zero and one}
 \usage{
-  licor2matrix(filename = NULL, write = T)
+  licor2matrix(data = NULL)
 }
 \arguments{
   \item{filename}{an optional filename given the full path
   or relative path. If not given the user is asked.}
-
-  \item{write}{logical shall an output file automatically
-  be written? Default is TRUE.}
 }
 \value{
   list filename and data if succesful; NA if otherwise

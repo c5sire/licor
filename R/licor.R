@@ -359,12 +359,8 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE,
           wb$writeWorksheet(lic$data[[i]], sheetName, header=TRUE)
 
           if(use.color) formatMarkerSheet(wb, sheetName, lic$data[[i]])
-          if(use.autoFilter) wb$setAutoFilter(sheetName, reference = aref("A1", dim(lic$data[[i]])))
-
-          wb$autoSizeColumns(sheetName, ncol(lic$data[[i]]))
-      }
-       
-      
+          if(use.autoFilter) wb$autoSizeColumns(sheetName, ncol(lic$data[[i]]))
+      } # end for
       if(summary){
         wb$createSheet(summName)
         smry = summary.licor(lic)
