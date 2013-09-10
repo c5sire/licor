@@ -3,6 +3,7 @@
 # Workaround: find out if on Mac and don't do formatting.
 
 
+
 is.mac <- function(){
   str_detect(.Platform$pkgType,"mac.binary")
 }
@@ -302,10 +303,8 @@ formatMarkerSheet <- function(wb, sheetName, data){
   setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+2, cellstyle = csl$negVal)
   ind  <- which(data[,c((als+1):ncol(data))] <= 0, arr.ind=TRUE)
   setCellStyle(wb, sheet = sheetName, row = ind[,1]+1, col = ind[,2]+als, cellstyle = csl$negVal)
-  
    
 }
-
 
 
 setGeneric("autoSizeColumns",
@@ -314,9 +313,25 @@ setGeneric("autoSizeColumns",
 setMethod("autoSizeColumns", 
           signature(object = "workbook", name="character", cols="integer"), 
           function(object, name, cols) {
-            for(i in 1:cols) object$setColumnWidth(name, i, -1)
+            object$setColumnWidth(name, 1:cols, -1)
           }
 )
+
+# 
+# setGeneric("hideColumns",
+#            function(object, name, cols, max) standardGeneric("hideColumns"))
+# 
+# setMethod("hideColumns", 
+#           signature(object = "workbook", name="character", cols="integer", max="integer"), 
+#           function(object, name, cols, max) {
+#             for(i in cols:max) object$setColumnWidth(name, i, 0)
+#           }
+# )
+
+hideColumns = function(object, name, cols, max) {
+  object$setColumnWidth(name, cols:max, 0)
+}
+
 
 
 #' Write licor transformed data to a file
@@ -353,13 +368,18 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE,
       if(file.exists(filename)) unlink(filename) # with XLConnect overwriting the same file causes a weird error with cellstyles
       wb= loadWorkbook(filename, create=TRUE)
       # Save each marker / sheet
+      
       for(i in 1:n){
+          nmx = ncol(lic$data[[i]])
           sheetName = names(lic$data)[i]
           wb$createSheet(sheetName)
           wb$writeWorksheet(lic$data[[i]], sheetName, header=TRUE)
-
           if(use.color) formatMarkerSheet(wb, sheetName, lic$data[[i]])
-          if(use.autoFilter) wb$autoSizeColumns(sheetName, ncol(lic$data[[i]]))
+          if(use.autoFilter) wb$autoSizeColumns(sheetName, nmx)
+          #hideColumns(wb, sheetName, (nmx+1), 16384)
+          
+          wb$createFreezePane(sheetName, 3, 2, 1)
+          
       } # end for
       if(summary){
         wb$createSheet(summName)

@@ -1,0 +1,53 @@
+Licor marker report
+========================================================
+
+```{r, echo=FALSE,results='hide',message=FALSE}
+library(licor, quietly=TRUE, verbose=FALSE)
+library(stringr)
+if(is.null(data)){
+fn = "../files/out1.xlsx"
+wb = loadWorkbook(fn)
+data = readWorksheet(wb,"Joined Licor data")
+smry = readWorksheet(wb,"Summary Licor data")
+} else {
+  smry = summary.licor(data)
+  data = join.markers(data)
+}
+```
+
+
+There were **`r nrow(data)`** samples in the joined marker matrix. The matrix has a total of **`r ncol(data)`** alleles across a total of **`r nrow(smry)`** markers.
+
+Summary of the marker data in the original file:
+
+```{r results='asis',echo=FALSE}
+library(xtable) 
+print(xtable(smry), type='html') 
+```
+
+### Duplicated individuals across all alleles
+
+```{r results='hide', echo=FALSE}
+
+mprof = apply(data[,2:ncol(data)],1,paste,collapse="")
+ndups = length(which(duplicated(mprof)))
+ndpct = round((ndups/nrow(data)*100), 0)
+gdups = data$Genotype[duplicated(mprof)]
+
+```
+There are **`r ndups` (`r ndpct`)%** duplicated genotypes (having exactly the same molecular profile). They are (omitting the first occurence): 
+
+`r paste(gdups, collapse=', ')`.
+
+
+
+```{r run-all,include=FALSE}
+out = NULL
+fcn = "../reports/child.Rmd"
+for(x in 1:nrow(smry)){
+  out = c(out,knit_child(fcn))
+}
+```
+
+`r paste(out, collapse = "\n")`
+

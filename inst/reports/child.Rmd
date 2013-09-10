@@ -1,0 +1,13 @@
+```{r, results='hide',echo=FALSE}
+mn = smry[x,"Marker"]
+al = str_split(smry[x,"bp"],", ")[[1]]
+an = paste(mn,al,sep=".")
+ds = data[,an]
+rownames(ds) = data$Genotype
+```
+
+### Marker `r x`: `r mn`
+
+```{r, fig.height=7, fig.width=7, fig.cap='Dotchart', echo=FALSE}
+dotchart(sort(colSums(ds)))
+```
