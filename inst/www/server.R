@@ -28,7 +28,7 @@ if(is.glimmer()){
     output$hint <- renderText({
       inFile <- input$file1
       if (is.null(inFile)) return(NULL)
-      if(input$useColor) "<br>Colorizing the Excel file may take some time!"
+      
       data = datasetInput()
       if(!is.null(data)){
         knit2html("../reports/report.Rmd")
