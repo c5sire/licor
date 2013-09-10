@@ -1,19 +1,21 @@
-Licor marker report
-========================================================
 
 ```{r, echo=FALSE,results='hide',message=FALSE}
 library(licor, quietly=TRUE, verbose=FALSE)
 library(stringr)
 if(is.null(data)){
-fn = "../files/out1.xlsx"
-wb = loadWorkbook(fn)
-data = readWorksheet(wb,"Joined Licor data")
-smry = readWorksheet(wb,"Summary Licor data")
+  #fn = "../files/out1.xlsx"
+  #wb = loadWorkbook(fn)
+  #data = readWorksheet(wb,"Joined Licor data")
+  #smry = readWorksheet(wb,"Summary Licor data")
 } else {
+  fn = basename(data$filename)
   smry = summary.licor(data)
   data = join.markers(data)
 }
 ```
+
+Licor marker report for file: `r fn`
+========================================================
 
 
 There were **`r nrow(data)`** samples in the joined marker matrix. The matrix has a total of **`r ncol(data)`** alleles across a total of **`r nrow(smry)`** markers.
