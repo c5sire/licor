@@ -8,7 +8,6 @@ is.mac <- function(){
   str_detect(.Platform$pkgType,"mac.binary")
 }
 
-
 # convert to zero or one
 convertVals = function(vals, refs){
   d3 = refs %in% vals
