@@ -4,15 +4,13 @@ is.glimmer <-function(){
 
 if(is.glimmer()){
   shinyUI(pageWithSidebar(
-    headerPanel("Licor to matrix converter (version 0.0.4)"),
+    headerPanel(paste("Licor to matrix converter (version ",version(),")", sep="")),
     sidebarPanel(
       fileInput('file1', 'Choose tab delimited or Excel File',
                 accept=c('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/xlsx'))
       ,
       tags$hr(),
       downloadButton('downloadData', 'Download converted data!')
-      
-      
     ),
     mainPanel(
       tableOutput('contents'),
@@ -24,7 +22,7 @@ if(is.glimmer()){
 
 
 shinyUI(pageWithSidebar(
-  headerPanel("Licor to matrix converter (version 0.0.4)"),
+  headerPanel(paste("Licor to matrix converter (version ",version(),")", sep="")),
   sidebarPanel(
     fileInput('file1', 'Choose tab delimited or Excel File',
               accept=c('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','application/xlsx'))

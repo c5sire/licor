@@ -12,13 +12,14 @@ if(is.null(data)){
   smry = summary.licor(data)
   data = join.markers(data)
 }
+nal = ncol(data)-1 # Number of alleles
 ```
 
 Licor marker report for file: `r fn`
 ========================================================
 
 
-There were **`r nrow(data)`** samples in the joined marker matrix. The matrix has a total of **`r ncol(data)`** alleles across a total of **`r nrow(smry)`** markers.
+There were **`r nrow(data)`** samples in the joined marker matrix. The matrix has a total of **`r nal`** alleles across a total of **`r nrow(smry)`** markers.
 
 Summary of the marker data in the original file:
 

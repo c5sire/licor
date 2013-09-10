@@ -25,15 +25,24 @@ if(is.glimmer()){
       loadWorkbook(fn)
     })
     
-    output$hint <- renderText({
+    reportOutput <-reactive({
       inFile <- input$file1
-      if (is.null(inFile)) return(NULL)
+      print(inFile)
+      if (is.null(inFile)){
+        return("Please select a file.")
+      } else {
+        #HTML("Processing ...")
+#         data = datasetInput()
+#         if(!is.null(data)){
+#           knit2html("../reports/report.Rmd")
+#           includeHTML("report.html")
+#         } 
+      }
       
-      data = datasetInput()
-      if(!is.null(data)){
-        knit2html("../reports/report.Rmd")
-        includeHTML("report.html")
-      } 
+    })
+    
+    output$hint <- renderText({
+      reportOutput()
     })
     
     
@@ -65,16 +74,25 @@ if(is.glimmer()){
       loadWorkbook(fn)
     })
     
-    output$hint <- renderText({
+    reportOutput <-reactive({
       inFile <- input$file1
-      if (is.null(inFile)) return(NULL)
-      if(input$useColor) "<br>Colorizing the Excel file may take some time!"
-      data = datasetInput()
-      if(!is.null(data)){
-        knit2html("../reports/report.Rmd")
-        includeHTML("report.html")
-      } 
+      #print(inFile)
+      if (is.null(inFile)){
+        return("Please select a file.")
+      } else {
+        data = datasetInput()
+        if(!is.null(data)){
+          knit2html("../reports/report.Rmd")
+          includeHTML("report.html")
+        } 
+      }
+      
     })
+    
+    output$hint <- renderText({
+      reportOutput()
+    })
+    
     
     
     output$downloadData <- downloadHandler(

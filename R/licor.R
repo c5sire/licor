@@ -2,6 +2,12 @@
 # Coloring on Mac via the xlsx library which uses Java does therefore not work.
 # Workaround: find out if on Mac and don't do formatting.
 
+getFilters <- function(){
+  Excel = c("Excel files (*.xlsx;*.xls)","*.xlsx;*.xls")
+  TabDel= c("Tab delimited file (*.txt)","*.txt")
+  Filters2 = rbind(Filters,Excel,TabDel)
+  Filters2
+}
 
 
 is.mac <- function(){
@@ -99,9 +105,7 @@ read.licor <- function(filename=NULL, datapath=NULL){
     } else fn = filename
     
   if(is.null(fn)) {
-    Excel = c("Excel files (*.xlsx;*.xls)","*.xlsx;*.xls")
-    TabDel= c("Tab delimited file (*.txt)","*.txt")
-    Filters2 = rbind(Filters,Excel,TabDel)
+    Filters2 = getFilters()
     filename = choose.files(default = "", caption = "Select licor file!",
                             filters = Filters2[c("TabDel","Excel"),] 
     )
@@ -129,7 +133,7 @@ read.licor <- function(filename=NULL, datapath=NULL){
 #' and the extension set to '.csv'.
 #' 
 #' @aliases licor2matrix
-#' @param filename an optional filename given the full path or relative path. If not given the user is asked.
+#' @param data the output from the read.licor function
 #' @return list filename and data if succesful; NA if otherwise
 #' @author Reinhard Simon
 #' @export
@@ -401,6 +405,47 @@ write.licor <- function(licor.res=NULL, outfile=NULL, summary=FALSE, join=FALSE,
   } # end if
 }
 
+#' Get the current version number of this package
+#' 
+#' For use in applications
+#' 
+#' @aliases version
+#' @author Reinhard Simon
+#' @export
+version <- function(){
+  str_extract(citation("licor")$note,"[0-9]{1}.[0-9]{1}.[0-9]{1}")
+}
+
+#' One-step function to read, transform and format a licor file on the command line.
+#' 
+#' It creates all features available for use in the resulting Excel file. The formatting involves
+#' coloring individual cells and is time consuming. For better control and faster execution, 
+#' consider using the lower level functions read.licor, licor2matrix and write.licor.
+#' 
+#' @aliases convertLicorData
+#' @author Reinhard Simon
+#' @export
+convertLicorData <- function(){
+  Filters2 = getFilters()
+  filename = choose.files(default = "", caption = "Select licor file!",
+                          filters = Filters2[c("TabDel","Excel"),] 
+  )
+  
+  if(length(filename)>0){
+    cat("This may take a while ... be patient.\n\n")
+    cat("Reading file ... ")
+    data = read.licor(filename)
+    cat("ok\nTransforming  data ... ")
+    data = licor2matrix(data)
+    cat("ok\nFormatting file ...")
+    fout = paste(filename,"_matrix.xlsx",sep="")
+    write.licor(data, fout, T, T, T, T)
+    cat("ok\n")
+  } else {
+    "No file selected!"
+  }
+  
+}
                         
 
 #' Presents the packages graphical user interface
