@@ -1,7 +1,7 @@
 Package: licor
 Type: Package
 Title: Tools for processing molecular data from a Licor sequencer
-Version: 0.0.5
+Version: 0.0.7
 Date: 2013-09-10
 Author: Reinhard Simon
 Maintainer: "Simon, Reinhard (CIP)" <R.SIMON@CGIAR.ORG>
