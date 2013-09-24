@@ -69,8 +69,12 @@ getValidLicorTables <- function(filename){
     ok = FALSE
     try({
       #data = read.xlsx2(filename, sheetName=nms[i], header=FALSE, stringsAsFactors=FALSE)
-      data = readWorksheet(wb, nms[i], header=FALSE)
-      ok = TRUE
+      if(getLastColumn(wb,nms[i])>2){
+        data = readWorksheet(wb, nms[i], header=FALSE)
+        ok = TRUE
+      } else {
+        out = out[[-i]]
+      }
     }, silent=TRUE)
     if(ok){
       res[i] = checkLicorFormat(data)
