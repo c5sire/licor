@@ -2,8 +2,15 @@
 # Coloring on Mac via the xlsx library which uses Java does therefore not work.
 # Workaround: find out if on Mac and don't do formatting.
 
+library(tcltk)
+
+Filters <- matrix(c("R code", ".R", "R code", ".s",
+                    "Text", ".txt", "All files", "*"),
+                  4, 2, byrow = TRUE)
+
+
 getFilters <- function(){
-  Excel = c("Excel files (*.xlsx;*.xls)","*.xlsx;*.xls")
+  Excel = c("Excel files (*.xlsx)","*.xlsx")
   TabDel= c("Tab delimited file (*.txt)","*.txt")
   Filters2 = rbind(Filters,Excel,TabDel)
   Filters2
@@ -73,7 +80,7 @@ getValidLicorTables <- function(filename){
         data = readWorksheet(wb, nms[i], header=FALSE)
         ok = TRUE
       } else {
-        out = out[[-i]]
+         out[[i]] = NULL
       }
     }, silent=TRUE)
     if(ok){
@@ -110,7 +117,7 @@ read.licor <- function(filename=NULL, datapath=NULL){
     
   if(is.null(fn)) {
     Filters2 = getFilters()
-    filename = choose.files(default = "", caption = "Select licor file!",
+    filename = tk_choose.files(default = "", caption = "Select licor file!",
                             filters = Filters2[c("TabDel","Excel"),] 
     )
   }
@@ -431,7 +438,7 @@ version <- function(){
 #' @export
 convertLicorData <- function(){
   Filters2 = getFilters()
-  filename = choose.files(default = "", caption = "Select licor file!",
+  filename = tk_choose.files(default = "", caption = "Select licor file!",
                           filters = Filters2[c("TabDel","Excel"),] 
   )
   

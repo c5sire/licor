@@ -17,6 +17,7 @@ Depends:
     shiny,
     stringr,
     XLConnect,
-    knitr
+    knitr,
+    tcltk
 Collate:
     'licor.R'

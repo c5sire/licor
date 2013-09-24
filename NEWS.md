@@ -1,3 +1,10 @@
+0.0.6
+------
+### Bug fixes
+- improved documentation on git
+- improved cross platform support for file dialog
+- improved function to 'convertLicorData'
+
 0.0.5
 -----
 

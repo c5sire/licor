@@ -35,7 +35,7 @@ The function will ask using a file dialog for a data archive to process. The fil
 ```{r}
 library(licor)
 
-converLicorData() #interactive modus
+convertLicorData() #interactive modus
 
 ```
 

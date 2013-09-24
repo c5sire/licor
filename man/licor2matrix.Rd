@@ -5,8 +5,7 @@
   licor2matrix(data = NULL)
 }
 \arguments{
-  \item{filename}{an optional filename given the full path
-  or relative path. If not given the user is asked.}
+  \item{data}{the output from the read.licor function}
 }
 \value{
   list filename and data if succesful; NA if otherwise
